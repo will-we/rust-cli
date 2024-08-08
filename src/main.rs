@@ -9,7 +9,7 @@ struct Opts {
 
 #[derive(Parser, Debug)]
 enum SubCommand {
-    #[command(name = "csv", about = "Subcommand for CSV operations")]
+    #[command(name = "csv", about = "读取csv文件并默认输出json文件")]
     Csv(CsvOpts),
 }
 
