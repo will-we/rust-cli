@@ -18,6 +18,7 @@ jobs:
     strategy:
       matrix:
         platform: [ubuntu-latest, macos-latest, windows-latest] # 定义操作系统矩阵
+        arch: [x86_64, aarch64] # 定义架构矩阵
     runs-on: ${{ matrix.platform }} # 定义作业运行的操作系统
     steps:
       - uses: actions/checkout@v4
@@ -39,27 +40,12 @@ jobs:
         run: cargo clippy --all-targets --all-features --tests --benches -- -D warnings
       - name: Execute rust tests
         run: cargo nextest run --all-features
-      - name: Generate a changelog
-        uses: orhun/git-cliff-action@v2
-        id: git-cliff
-        if: startsWith(github.ref, 'refs/tags/')
-        with:
-          config: cliff.toml
-          args: -vv --latest --strip header
-        env:
-          OUTPUT: CHANGES.md
-      - name: Release
-        uses: softprops/action-gh-release@v1
-        if: startsWith(github.ref, 'refs/tags/')
-        with:
-          body: ${{ steps.git-cliff.outputs.content }}
-
       - name: Build project
         run: cargo build --release # 构建项目的发布版本
 
       # 上传Linux x86_64平台的构建产物
       - name: Upload artifact (Linux)
-        if: matrix.os == 'ubuntu-latest' && matrix.arch == 'x86_64'
+        if: matrix.platform == 'ubuntu-latest' && matrix.arch == 'x86_64'
         uses: actions/upload-artifact@v2
         with:
           name: ubuntu-latest-rustCli
@@ -67,7 +53,7 @@ jobs:
 
       # 上传Linux aarch64平台的构建产物
       - name: Upload artifact (Linux arch64)
-        if: matrix.os == 'ubuntu-latest' && matrix.arch == 'aarch64'
+        if: matrix.platform == 'ubuntu-latest' && matrix.arch == 'aarch64'
         uses: actions/upload-artifact@v2
         with:
           name: ubuntu-latest-rustCli-aarch64
@@ -75,7 +61,7 @@ jobs:
 
       # 上传Linux aarch64平台的构建产物
       - name: Upload artifact (Linux aarch64)
-        if: matrix.os == 'ubuntu-latest' && matrix.arch == 'aarch64'
+        if: matrix.platform == 'ubuntu-latest' && matrix.arch == 'aarch64'
         uses: actions/upload-artifact@v2
         with:
           name: ubuntu-latest-rustCli-aarch64
@@ -83,7 +69,7 @@ jobs:
 
       # 上传macOS x86_64平台的构建产物
       - name: Upload artifact (macOS)
-        if: matrix.os == 'macos-latest' && matrix.arch == 'x86_64'
+        if: matrix.platform == 'macos-latest' && matrix.arch == 'x86_64'
         uses: actions/upload-artifact@v2
         with:
           name: macos-latest-rustCli
@@ -91,7 +77,7 @@ jobs:
 
       # 上传macOS aarch64平台的构建产物
       - name: Upload artifact (macOS aarch64)
-        if: matrix.os == 'macos-latest' && matrix.arch == 'aarch64'
+        if: matrix.platform == 'macos-latest' && matrix.arch == 'aarch64'
         uses: actions/upload-artifact@v2
         with:
           name: macos-latest-rustCli-aarch64
@@ -99,7 +85,7 @@ jobs:
 
       # 上传Windows x86_64平台的构建产物
       - name: Upload artifact (Windows)
-        if: matrix.os == 'windows-latest' && matrix.arch == 'x86_64'
+        if: matrix.platform == 'windows-latest' && matrix.arch == 'x86_64'
         uses: actions/upload-artifact@v2
         with:
           name: windows-latest-rustCli
@@ -107,7 +93,7 @@ jobs:
 
       # 上传Windows aarch64平台的构建产物
       - name: Upload artifact (Windows aarch64)
-        if: matrix.os == 'windows-latest' && matrix.arch == 'aarch64'
+        if: matrix.platform == 'windows-latest' && matrix.arch == 'aarch64'
         uses: actions/upload-artifact@v2
         with:
           name: windows-latest-rustCli-aarch64
@@ -119,7 +105,9 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2 # 检出仓库代码
+        uses: actions/checkout@v4 # 检出仓库代码
+        with:
+          fetch-depth: 0
 
       # 下载Linux x86_64平台的构建产物
       - name: Download artifact (Linux-x86_64)
@@ -163,24 +151,32 @@ jobs:
           name: windows-latest-rustCli-aarch64
           path: artifacts/windows
 
+      - name: Generate a changelog
+        uses: orhun/git-cliff-action@v3 # 生成changelog
+        id: git-cliff
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          config: cliff.toml
+          args: -vv --latest --strip header
+        env:
+          OUTPUT: CHANGES.md
+
+      - name: Print the changelog
+        run: cat "${{ steps.git-cliff.outputs.changelog }}" # 打印changelog
+
       - name: Create release
         id: create_release
-        uses: actions/create-release@v1 # 创建GitHub release
-        env:
-          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }} # 使用GitHub令牌进行身份验证
+        uses: softprops/action-gh-release@v1 # 创建GitHub release
+        if: startsWith(github.ref, 'refs/tags/') # 只在推送标签时创建发布
         with:
-          tag_name: ${{ github.ref }} # 使用推送的标签名
-          release_name: Release ${{ github.ref }} # 使用推送的标签名作为发布名称
-          body: |
-            Changes in this Release
-            - First Change
-            - Second Change # 发布说明
+          body: ${{ steps.git-cliff.outputs.content }} # 使用生成的changelog作为发布内容
           draft: false # 是否为草稿
           prerelease: false # 是否为预发布
 
       # 上传Linux x86_64平台的构建产物到发布页面
       - name: Upload Linux x86_64 artifact
         uses: actions/upload-release-asset@v1
+        if: startsWith(github.ref, 'refs/tags/')  # 只在推送标签时上传构建产物
         env:
           GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }} # 使用GitHub令牌进行身份验证
         with:
@@ -192,6 +188,7 @@ jobs:
       # 上传macOS x86_64平台的构建产物到发布页面
       - name: Upload macOS x86_64 artifact
         uses: actions/upload-release-asset@v1
+        if: startsWith(github.ref, 'refs/tags/')  # 只在推送标签时上传构建产物
         env:
           GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }} # 使用GitHub令牌进行身份验证
         with:
@@ -205,6 +202,7 @@ jobs:
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }} # 使用GitHub令牌进行身份验证
+        if: startsWith(github.ref, 'refs/tags/')  # 只在推送标签时上传构建产物
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }} # 使用创建发布步骤生成的上传URL
           asset_path: artifacts/windows/rustCli.exe # 上传的文件路径
@@ -216,6 +214,7 @@ jobs:
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }} # 使用GitHub令牌进行身份验证
+        if: startsWith(github.ref, 'refs/tags/')  # 只在推送标签时上传构建产物
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }} # 使用创建发布步骤生成的上传URL
           asset_path: artifacts/ubuntu/rustCli # 上传的文件路径
@@ -227,6 +226,7 @@ jobs:
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }} # 使用GitHub令牌进行身份验证
+        if: startsWith(github.ref, 'refs/tags/')  # 只在推送标签时上传构建产物
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }} # 使用创建发布步骤生成的上传URL
           asset_path: artifacts/macos/rustCli # 上传的文件路径
@@ -238,9 +238,9 @@ jobs:
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }} # 使用GitHub令牌进行身份验证
+        if: startsWith(github.ref, 'refs/tags/')  # 只在推送标签时上传构建产物
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }} # 使用创建发布步骤生成的上传URL
           asset_path: artifacts/windows/rustCli.exe # 上传的文件路径
           asset_name: rustCli-windows-aarch64.exe # 上传的文件名
           asset_content_type: application/octet-stream # 文件内容类型
-
