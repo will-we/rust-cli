@@ -1,7 +1,7 @@
 use clap::Parser;
 
 #[derive(Parser, Debug)]
-#[command(name = "rustCli", version, about, long_about = None)]
+#[command(name = "rustCli", version, about="rust命令行工具", long_about = None)]
 struct Opts {
     #[command(subcommand)]
     cmd: SubCommand,
