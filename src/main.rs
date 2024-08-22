@@ -1,38 +1,28 @@
+mod opts;
+
+use crate::opts::{Opts, Person, SubCommand};
 use clap::Parser;
+use csv::Reader;
+use std::fs;
 
-#[derive(Parser, Debug)]
-#[command(name = "rustCli", version, about="rust命令行工具", long_about = None)]
-struct Opts {
-    #[command(subcommand)]
-    cmd: SubCommand,
-}
-
-#[derive(Parser, Debug)]
-enum SubCommand {
-    #[command(name = "csv", about = "读取csv文件并默认输出json文件")]
-    Csv(CsvOpts),
-}
-
-#[derive(Parser, Debug)]
-struct CsvOpts {
-    /// Name of the person to greet
-    #[arg(short, long)]
-    input: String,
-
-    /// Output file name
-    #[arg(short, long, default_value = "output.json")]
-    output: String,
-
-    /// Delimiter to use for output file
-    #[arg(short, long, default_value = ",")]
-    delimiter: String,
-
-    #[arg(long, default_value_t = true)]
-    header: bool,
-}
-
-/// rustCli csv -i input.csv -o output.json -d ","
-fn main() {
+/// rust-li csv -i input.csv -o output.json -d ","
+fn main() -> anyhow::Result<()> {
     let opts = Opts::parse();
-    println!("{:?}", opts);
+    match opts.cmd {
+        SubCommand::Csv(opts) => {
+            let mut reader = Reader::from_path(opts.input)?;
+
+            let mut persons: Vec<Person> = Vec::new();
+            // 读取csv文件
+            for record in reader.deserialize() {
+                let person: Person = record?;
+                println!(" {:?}", person);
+                persons.push(person);
+            }
+
+            // 输出json文件
+            let result = serde_json::to_string_pretty(&persons)?;
+            Ok(fs::write(opts.output, result)?)
+        }
+    }
 }
