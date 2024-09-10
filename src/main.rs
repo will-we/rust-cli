@@ -16,7 +16,6 @@ fn main() -> anyhow::Result<()> {
             // 读取csv文件
             for record in reader.deserialize() {
                 let person: Person = record?;
-                println!(" {:?}", person);
                 persons.push(person);
             }
 
