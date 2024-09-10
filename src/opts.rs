@@ -1,6 +1,6 @@
-use std::path;
 use clap::Parser;
 use serde::{Deserialize, Serialize};
+use std::path;
 
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "PascalCase")]
