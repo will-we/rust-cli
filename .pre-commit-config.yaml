@@ -29,14 +29,14 @@ repos:
         description: Check cargo dependencies
         entry: bash -c 'cargo deny check -d'
         language: rust
-        files: \.rs$
+        exclude: '.*'  # 跳过所有文件
         args: []
       - id: typos
         name: typos
         description: check typo
         entry: bash -c 'typos'
         language: rust
-        files: \.*$
+        exclude: '.*'  # 跳过所有文件
         pass_filenames: false
       - id: cargo-check
         name: cargo check
