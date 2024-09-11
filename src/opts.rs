@@ -11,7 +11,7 @@ pub struct Person {
 }
 
 #[derive(Parser, Debug)]
-#[command(name = "rustCli", version, about="rust命令行工具", long_about = None)]
+#[command(name = "rust-cli", version, about="rust命令行工具", long_about = None)]
 pub struct Opts {
     #[command(subcommand)]
     pub(crate) cmd: SubCommand,
@@ -21,6 +21,26 @@ pub struct Opts {
 pub enum SubCommand {
     #[command(name = "csv", about = "读取csv文件并默认输出json文件")]
     Csv(CsvOpts),
+    #[command(name = "gen-pass", about = "生成随机密码")]
+    GenPass(GenPassOpts),
+}
+
+#[derive(Debug, Parser)]
+pub struct GenPassOpts {
+    #[arg(short, long, default_value_t = 16)]
+    pub length: u8,
+
+    #[arg(long, default_value_t = true)]
+    pub uppercase: bool,
+
+    #[arg(long, default_value_t = true)]
+    pub lowercase: bool,
+
+    #[arg(long, default_value_t = true)]
+    pub number: bool,
+
+    #[arg(long, default_value_t = true)]
+    pub symbol: bool,
 }
 
 #[derive(Parser, Debug)]
