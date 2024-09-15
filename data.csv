@@ -1,4 +1,4 @@
-Name,Age,Occupation
-Alice,30,Engineer
-Bob,25,Designer
-Charlie,35,Teacher
+Name,Age,Occupation,Salary
+Alice,30,Engineer,50000
+Bob,25,Designer,40000
+Charlie,35,Teacher,60000

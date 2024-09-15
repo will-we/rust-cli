@@ -1,14 +1,5 @@
 use clap::Parser;
-use serde::{Deserialize, Serialize};
 use std::path;
-
-#[derive(Debug, Deserialize, Serialize)]
-#[serde(rename_all = "PascalCase")]
-pub struct Person {
-    name: String,
-    age: u8,
-    occupation: String,
-}
 
 #[derive(Parser, Debug)]
 #[command(name = "rust-cli", version, about="rust命令行工具", long_about = None)]

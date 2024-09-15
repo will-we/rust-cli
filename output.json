@@ -1,17 +1,20 @@
 [
   {
-    "Name": "Alice",
-    "Age": 30,
-    "Occupation": "Engineer"
+    "Age": "30",
+    "Name": "alice",
+    "Occupation": "engineer",
+    "Salary": "50000"
   },
   {
-    "Name": "Bob",
-    "Age": 25,
-    "Occupation": "Designer"
+    "Age": "25",
+    "Name": "bob",
+    "Occupation": "designer",
+    "Salary": "40000"
   },
   {
-    "Name": "Charlie",
-    "Age": 35,
-    "Occupation": "Teacher"
+    "Age": "35",
+    "Name": "charlie",
+    "Occupation": "teacher",
+    "Salary": "60000"
   }
 ]
