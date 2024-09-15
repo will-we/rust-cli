@@ -1,9 +1,10 @@
-use base64::prelude::BASE64_STANDARD_NO_PAD;
+use base64::engine::general_purpose::URL_SAFE;
+use base64::prelude::BASE64_STANDARD;
 use base64::Engine;
 use clap::Parser;
 use csv::Reader;
 use rand::Rng;
-use rust_cli::base64::Base64SubCommand;
+use rust_cli::base64::{Base64Format, Base64SubCommand};
 use rust_cli::opts::{Opts, SubCommand};
 use serde_json::Value;
 use std::fs;
@@ -44,16 +45,38 @@ fn main() -> anyhow::Result<()> {
                 println!("Encoding: {:?}", opts);
                 let mut std_in_str = String::new();
                 stdin().read_line(&mut std_in_str)?;
+                // 优化去掉/r/n
+                let input_str = std_in_str.trim_end();
                 //打印输入的字符串
-                print!("Input: {:?}", std_in_str);
+                print!("Input: {:?} ", input_str);
                 //编码
                 let mut buf = String::new();
-                BASE64_STANDARD_NO_PAD.encode_string(std_in_str, &mut buf);
+                match opts.format {
+                    Base64Format::Standard => {
+                        BASE64_STANDARD.encode_string(input_str, &mut buf);
+                    }
+                    Base64Format::UrlSafe => {
+                        URL_SAFE.encode_string(input_str, &mut buf);
+                    }
+                }
                 println!("Encoded: {}", buf);
                 Ok(())
             }
             Base64SubCommand::Decode(opts) => {
                 println!("Decoding: {:?}", opts);
+                let mut std_in_str = String::new();
+                stdin().read_line(&mut std_in_str)?;
+                // 优化去掉/r/n
+                let input_str = std_in_str.trim_end();
+                //打印输入的字符串
+                print!("Input: {:?} ", input_str);
+                //编码
+                let decoded = match opts.format {
+                    Base64Format::Standard => BASE64_STANDARD.decode(input_str)?,
+                    Base64Format::UrlSafe => URL_SAFE.decode(input_str)?,
+                };
+                let decoded_str = String::from_utf8(decoded)?;
+                println!("Decoded: {}", decoded_str);
                 Ok(())
             }
         },
