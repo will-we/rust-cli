@@ -1,11 +1,13 @@
-mod opts;
-
-use crate::opts::{Opts, SubCommand};
+use base64::prelude::BASE64_STANDARD_NO_PAD;
+use base64::Engine;
 use clap::Parser;
 use csv::Reader;
 use rand::Rng;
+use rust_cli::base64::Base64SubCommand;
+use rust_cli::opts::{Opts, SubCommand};
 use serde_json::Value;
 use std::fs;
+use std::io::stdin;
 
 /// rust-li csv -i input.csv -o output.json -d ","
 fn main() -> anyhow::Result<()> {
@@ -37,6 +39,24 @@ fn main() -> anyhow::Result<()> {
             println!("Password: {}", pass);
             Ok(())
         }
+        SubCommand::Base64(base64_sub_command) => match base64_sub_command {
+            Base64SubCommand::Encode(opts) => {
+                println!("Encoding: {:?}", opts);
+                let mut std_in_str = String::new();
+                stdin().read_line(&mut std_in_str)?;
+                //打印输入的字符串
+                print!("Input: {:?}", std_in_str);
+                //编码
+                let mut buf = String::new();
+                BASE64_STANDARD_NO_PAD.encode_string(std_in_str, &mut buf);
+                println!("Encoded: {}", buf);
+                Ok(())
+            }
+            Base64SubCommand::Decode(opts) => {
+                println!("Decoding: {:?}", opts);
+                Ok(())
+            }
+        },
     }
 }
 
