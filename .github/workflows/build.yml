@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - workflow/*
     tags:
       - v*
   pull_request:
@@ -46,7 +47,7 @@ jobs:
       # 上传Linux x86_64平台的构建产物
       - name: Upload artifact (Linux)
         if: matrix.platform == 'ubuntu-latest' && matrix.arch == 'x86_64'
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: ubuntu-latest-rust-cli
           path: target/release/rust-cli
@@ -54,15 +55,7 @@ jobs:
       # 上传Linux aarch64平台的构建产物
       - name: Upload artifact (Linux arch64)
         if: matrix.platform == 'ubuntu-latest' && matrix.arch == 'aarch64'
-        uses: actions/upload-artifact@v2
-        with:
-          name: ubuntu-latest-rust-cli-aarch64
-          path: target/release/rust-cli
-
-      # 上传Linux aarch64平台的构建产物
-      - name: Upload artifact (Linux aarch64)
-        if: matrix.platform == 'ubuntu-latest' && matrix.arch == 'aarch64'
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: ubuntu-latest-rust-cli-aarch64
           path: target/release/rust-cli
@@ -70,7 +63,7 @@ jobs:
       # 上传macOS x86_64平台的构建产物
       - name: Upload artifact (macOS)
         if: matrix.platform == 'macos-latest' && matrix.arch == 'x86_64'
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: macos-latest-rust-cli
           path: target/release/rust-cli
@@ -78,7 +71,7 @@ jobs:
       # 上传macOS aarch64平台的构建产物
       - name: Upload artifact (macOS aarch64)
         if: matrix.platform == 'macos-latest' && matrix.arch == 'aarch64'
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: macos-latest-rust-cli-aarch64
           path: target/release/rust-cli
@@ -86,7 +79,7 @@ jobs:
       # 上传Windows x86_64平台的构建产物
       - name: Upload artifact (Windows)
         if: matrix.platform == 'windows-latest' && matrix.arch == 'x86_64'
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: windows-latest-rust-cli
           path: target/release/rust-cli.exe
@@ -94,7 +87,7 @@ jobs:
       # 上传Windows aarch64平台的构建产物
       - name: Upload artifact (Windows aarch64)
         if: matrix.platform == 'windows-latest' && matrix.arch == 'aarch64'
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: windows-latest-rust-cli-aarch64
           path: target/release/rust-cli.exe
@@ -111,48 +104,48 @@ jobs:
 
       # 下载Linux x86_64平台的构建产物
       - name: Download artifact (Linux-x86_64)
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: ubuntu-latest-rust-cli
           path: artifacts/ubuntu
 
       # 下载macOS x86_64平台的构建产物
       - name: Download artifact (macOS-x86_64)
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: macos-latest-rust-cli
           path: artifacts/macos
 
       # 下载Windows x86_64平台的构建产物
       - name: Download artifact (Windows-x86_64)
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: windows-latest-rust-cli
           path: artifacts/windows
 
       # 下载Linux aarch64平台的构建产物
       - name: Download artifact (Linux-aarch64)
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: ubuntu-latest-rust-cli-aarch64
           path: artifacts/ubuntu
 
       # 下载macOS aarch64平台的构建产物
       - name: Download artifact (macOS-aarch64)
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: macos-latest-rust-cli-aarch64
           path: artifacts/macos
 
       # 下载Windows aarch64平台的构建产物
       - name: Download artifact (Windows-aarch64)
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: windows-latest-rust-cli-aarch64
           path: artifacts/windows
 
       - name: Generate a changelog
-        uses: orhun/git-cliff-action@v3 # 生成changelog
+        uses: orhun/git-cliff-action@v4 # 生成changelog
         id: git-cliff
         if: startsWith(github.ref, 'refs/tags/')
         with:
@@ -166,7 +159,7 @@ jobs:
 
       - name: Create release
         id: create_release
-        uses: softprops/action-gh-release@v1 # 创建GitHub release
+        uses: softprops/action-gh-release@v2 # 创建GitHub release
         if: startsWith(github.ref, 'refs/tags/') # 只在推送标签时创建发布
         with:
           body: ${{ steps.git-cliff.outputs.content }} # 使用生成的changelog作为发布内容
