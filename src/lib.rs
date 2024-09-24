@@ -1,3 +1,3 @@
-mod opts;
+mod cli;
 
-pub use opts::Opts;
+pub use cli::{base64, csv, genpass, opts};

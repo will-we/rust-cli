@@ -4,7 +4,7 @@
 
 ## Usage
 
-```
+```bash
 rust-cli <command> [options]
 ```
 
@@ -13,6 +13,8 @@ rust-cli <command> [options]
 - `csv`: CSV file processing tool. CSV file can be converted to JSON or YAML format.
 - `json`: JSON file processing tool. JSON file can be converted to CSV or YAML format.
 - `random`: Generate random JSON data.
+- `base64`: Base64 encoding and decoding tool.
+
 ## Options
 
 - `-h, --help`: Show help.

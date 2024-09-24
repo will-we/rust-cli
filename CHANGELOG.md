@@ -5,17 +5,32 @@ All notable changes to this project will be documented in this file. See [conven
 ---
 ## [unreleased]
 
+### Features
+
+- support standard input to base64 encoding - ([5758091](https://github.com/will-we/rust-cli/commit/5758091c25de2e33e928764c16eb19e3cdaf6c04)) - will-we
+- support standard input to base64 decoding - ([98ff633](https://github.com/will-we/rust-cli/commit/98ff633718a5986603c1d0f3aac8fa91f1b4c7a2)) - will-we
+
+### Other
+
+- add base64 crate - ([61800ec](https://github.com/will-we/rust-cli/commit/61800ecc5c3ed215c1dceafd22ef372f7274261a)) - will-we
+
+---
+## [0.0.4](https://github.com/will-we/rust-cli/compare/v0.0.3..v0.0.4) - 2024-09-21
+
 ### Bug Fixes
 
-- remove unused log and skip cargo deny check - ([48fd8aa](https://github.com/will-we/rust-cli/commit/48fd8aadc52114f50f5a9bcd546340ba51738bc9)) - will-we
+- remove unused log and skip cargo deny check - ([a92dce3](https://github.com/will-we/rust-cli/commit/a92dce36c127c86d10ad60b2350e9b7c7cbc8b82)) - will-we
+- fix：repository url error - ([2f7ed74](https://github.com/will-we/rust-cli/commit/2f7ed741b3590939d3682f0371d6c0d31bd5bd33)) - will-we
+- fix：support any csv file to convert to json - ([28bda57](https://github.com/will-we/rust-cli/commit/28bda5778448115b9ad5eccecf276b59a76546a6)) - will-we
+- fix：updated version of workflow - ([4265f5b](https://github.com/will-we/rust-cli/commit/4265f5bb5ad790ba2b189ce5cddd8532c6bd89f2)) - will-we
 
 ### Documentation
 
-- doc：add CHANGELOG - ([99972cd](https://github.com/will-we/rust-cli/commit/99972cde6f2852a8719562f21eb2677a2189ad10)) - will-we
+- doc：add CHANGELOG - ([305a417](https://github.com/will-we/rust-cli/commit/305a4179ba36e00984b05f27ee416edc953093e8)) - will-we
 
 ### Features
 
-- support for random passwords - ([2b0e621](https://github.com/will-we/rust-cli/commit/2b0e62178f3bec4f72938c686c68058389d4ecb4)) - will-we
+- support for random passwords - ([42500e9](https://github.com/will-we/rust-cli/commit/42500e97612186314a17e4e19f6b650d57db22f3)) - will-we
 
 ### Other
 
