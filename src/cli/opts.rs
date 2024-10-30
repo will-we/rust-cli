@@ -1,4 +1,5 @@
 use crate::base64::Base64SubCommand;
+use crate::cli::http::HttpCommand;
 use crate::csv::CsvOpts;
 use crate::genpass::GenPassOpts;
 use clap::Parser;
@@ -18,4 +19,6 @@ pub enum SubCommand {
     GenPass(GenPassOpts),
     #[command(subcommand, about = "base64编解码")]
     Base64(Base64SubCommand),
+    #[command(name = "http", subcommand, about = "http服务")]
+    Http(HttpCommand),
 }
