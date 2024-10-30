@@ -3,6 +3,7 @@ use std::path;
 pub mod base64;
 pub mod csv;
 pub mod genpass;
+pub mod http;
 pub mod opts;
 
 /// 自定义参数校验器: 校验文件路径是否存在

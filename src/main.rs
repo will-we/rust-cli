@@ -5,13 +5,17 @@ use clap::Parser;
 use csv::Reader;
 use rand::Rng;
 use rust_cli::base64::{Base64Format, Base64SubCommand};
+use rust_cli::http::HttpCommand;
 use rust_cli::opts::{Opts, SubCommand};
 use serde_json::Value;
 use std::fs;
 use std::io::stdin;
-
+use tracing::info;
 /// rust-li csv -i input.csv -o output.json -d ","
 fn main() -> anyhow::Result<()> {
+    tracing_subscriber::fmt::init();
+    info!("Starting rust-li...2");
+
     let opts = Opts::parse();
     match opts.cmd {
         SubCommand::Csv(opts) => {
@@ -77,6 +81,17 @@ fn main() -> anyhow::Result<()> {
                 };
                 let decoded_str = String::from_utf8(decoded)?;
                 println!("Decoded: {}", decoded_str);
+                Ok(())
+            }
+        },
+
+        SubCommand::Http(http_command) => match http_command {
+            HttpCommand::Serve(opts) => {
+                println!("Serving HTTP requests on port {}", opts.port);
+                Ok(())
+            }
+            HttpCommand::Client(opts) => {
+                println!("Client requests to {}", opts.server);
                 Ok(())
             }
         },
