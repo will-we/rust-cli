@@ -12,6 +12,8 @@ pub enum HttpCommand {
 pub struct ServeOpts {
     #[arg(short, long, default_value = "8080", help = "监听端口")]
     pub port: u16,
+    #[arg(long, default_value = ".", help = "文件根目录")]
+    pub path: String,
 }
 
 #[derive(Parser, Debug)]
