@@ -1,3 +1,5 @@
+use axum::routing::get;
+use axum::Router;
 use base64::engine::general_purpose::URL_SAFE;
 use base64::prelude::BASE64_STANDARD;
 use base64::Engine;
@@ -10,11 +12,13 @@ use rust_cli::opts::{Opts, SubCommand};
 use serde_json::Value;
 use std::fs;
 use std::io::stdin;
+use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use tracing::info;
 /// rust-li csv -i input.csv -o output.json -d ","
-fn main() -> anyhow::Result<()> {
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
     tracing_subscriber::fmt::init();
-    info!("Starting rust-li...2");
+    info!("Starting rust-li...");
 
     let opts = Opts::parse();
     match opts.cmd {
@@ -87,7 +91,9 @@ fn main() -> anyhow::Result<()> {
 
         SubCommand::Http(http_command) => match http_command {
             HttpCommand::Serve(opts) => {
-                println!("Serving HTTP requests on port {}", opts.port);
+                process_http_requests(opts.port, opts.path)
+                    .await
+                    .expect("server start failed");
                 Ok(())
             }
             HttpCommand::Client(opts) => {
@@ -98,10 +104,24 @@ fn main() -> anyhow::Result<()> {
     }
 }
 
+async fn process_http_requests(port: u16, path: String) -> anyhow::Result<()> {
+    info!("Serving HTTP requests on port {}, path {}", port, path);
+    let app = Router::new().route("/", get(index_handler()));
+    let addr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), port);
+    let listener = tokio::net::TcpListener::bind(addr).await?;
+    info!("Listening on http://{}", listener.local_addr()?);
+    axum::serve(listener, app).await?;
+    Ok(())
+}
+
 fn generate_password(length: u8) -> String {
     rand::thread_rng()
         .sample_iter(&rand::distributions::Alphanumeric)
         .take(length as usize)
         .map(char::from)
         .collect()
+}
+
+fn index_handler() -> &'static str {
+    "hello world, this is from rust server!"
 }
