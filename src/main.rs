@@ -1,3 +1,5 @@
+use axum::extract::{Path, State};
+use axum::http::StatusCode;
 use axum::routing::get;
 use axum::Router;
 use base64::engine::general_purpose::URL_SAFE;
@@ -13,7 +15,11 @@ use serde_json::Value;
 use std::fs;
 use std::io::stdin;
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
+use std::path::PathBuf;
+use std::sync::Arc;
 use tracing::info;
+use tracing::log::warn;
+
 /// rust-li csv -i input.csv -o output.json -d ","
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -91,7 +97,7 @@ async fn main() -> anyhow::Result<()> {
 
         SubCommand::Http(http_command) => match http_command {
             HttpCommand::Serve(opts) => {
-                process_http_requests(opts.port, opts.path)
+                process_http_requests(opts.port, opts.path.parse()?)
                     .await
                     .expect("server start failed");
                 Ok(())
@@ -104,12 +110,25 @@ async fn main() -> anyhow::Result<()> {
     }
 }
 
-async fn process_http_requests(port: u16, path: String) -> anyhow::Result<()> {
-    info!("Serving HTTP requests on port {}, path {}", port, path);
-    let app = Router::new().route("/", get(index_handler()));
+#[derive(Debug)]
+struct HttpServeState {
+    path: PathBuf,
+}
+
+async fn process_http_requests(port: u16, path: PathBuf) -> anyhow::Result<()> {
+    info!(
+        "Serving HTTP requests on port {}, path {}",
+        port,
+        path.display()
+    );
+    let state = HttpServeState { path };
+    let app = Router::new()
+        .route("/*path", get(file_handler))
+        .with_state(Arc::new(state));
     let addr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), port);
     let listener = tokio::net::TcpListener::bind(addr).await?;
-    info!("Listening on http://{}", listener.local_addr()?);
+    //noinspection HttpUrlsUsage
+    info!("Listening on https://{}", listener.local_addr()?);
     axum::serve(listener, app).await?;
     Ok(())
 }
@@ -122,6 +141,24 @@ fn generate_password(length: u8) -> String {
         .collect()
 }
 
-fn index_handler() -> &'static str {
-    "hello world, this is from rust server!"
+async fn file_handler(
+    State(state): State<Arc<HttpServeState>>,
+    Path(path): Path<String>,
+) -> (StatusCode, String) {
+    let p = state.path.join(path);
+    info!("Handling file: {}", p.display());
+    if !p.exists() {
+        (StatusCode::NOT_FOUND, "File already exists".to_owned())
+    } else {
+        match tokio::fs::read_to_string(p).await {
+            Ok(content) => {
+                info!("Read {} bytes", content.len());
+                (StatusCode::OK, content)
+            }
+            Err(e) => {
+                warn!("Error reading file: {:?}", e);
+                (StatusCode::INTERNAL_SERVER_ERROR, e.to_string())
+            }
+        }
+    }
 }
