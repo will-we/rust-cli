@@ -1,5 +1,6 @@
 use axum::extract::{Path, State};
-use axum::http::StatusCode;
+use axum::http::{header, StatusCode};
+use axum::response::IntoResponse;
 use axum::routing::get;
 use axum::Router;
 use base64::engine::general_purpose::URL_SAFE;
@@ -152,20 +153,65 @@ fn generate_password(length: u8) -> String {
 async fn file_handler(
     State(state): State<Arc<HttpServeState>>,
     Path(path): Path<String>,
-) -> (StatusCode, String) {
-    let p = state.path.join(path);
+) -> impl IntoResponse {
+    let p = state.path.join(path.clone());
     info!("Handling file: {}", p.display());
     if !p.exists() {
-        (StatusCode::NOT_FOUND, "File already exists".to_owned())
+        (
+            StatusCode::NOT_FOUND,
+            [(header::CONTENT_TYPE, "text/plain; charset=utf-8")],
+            "File already exists".to_owned(),
+        )
+    } else if p.is_dir() {
+        // 列举该目录下的所有文件
+        match fs::read_dir(&p) {
+            Ok(entries) => {
+                let mut file_list = String::new();
+                file_list.push_str("<html><body><h1>Directory Listing</h1><ul>");
+                file_list.push_str(
+                    &entries
+                        .filter_map(|entry| entry.ok()) // 过滤掉 Err 值，保留 Ok(entry)
+                        .map(|entry| {
+                            let file_name = entry.file_name().into_string().unwrap_or_default();
+                            let file_path = format!("{}/{}", path.clone(), file_name);
+                            format!("<li><a href=\"{}\">{}</a></li>", file_path, file_name)
+                        })
+                        .collect::<Vec<_>>()
+                        .join(""),
+                );
+                file_list.push_str("</ul></body></html>");
+                (
+                    StatusCode::OK,
+                    [(header::CONTENT_TYPE, "text/html; charset=utf-8")],
+                    file_list,
+                )
+            }
+            Err(e) => {
+                warn!("Error reading directory: {:?}", e);
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    [(header::CONTENT_TYPE, "text/html; charset=utf-8")],
+                    "Error reading directory".to_owned(),
+                )
+            }
+        }
     } else {
         match tokio::fs::read_to_string(p).await {
             Ok(content) => {
                 info!("Read {} bytes", content.len());
-                (StatusCode::OK, content)
+                (
+                    StatusCode::OK,
+                    [(header::CONTENT_TYPE, "text/plain; charset=utf-8")],
+                    content,
+                )
             }
             Err(e) => {
                 warn!("Error reading file: {:?}", e);
-                (StatusCode::INTERNAL_SERVER_ERROR, e.to_string())
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    [(header::CONTENT_TYPE, "text/plain; charset=utf-8")],
+                    e.to_string(),
+                )
             }
         }
     }
