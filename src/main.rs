@@ -17,6 +17,7 @@ use std::io::stdin;
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use std::path::PathBuf;
 use std::sync::Arc;
+use tower_http::services::ServeDir;
 use tracing::info;
 use tracing::log::warn;
 
@@ -121,9 +122,16 @@ async fn process_http_requests(port: u16, path: PathBuf) -> anyhow::Result<()> {
         port,
         path.display()
     );
-    let state = HttpServeState { path };
+    let state = HttpServeState { path: path.clone() };
+    let dir = ServeDir::new(path)
+        .append_index_html_on_directories(true)
+        .precompressed_gzip()
+        .precompressed_br()
+        .precompressed_deflate()
+        .precompressed_zstd();
     let app = Router::new()
         .route("/*path", get(file_handler))
+        .nest_service("/tower", dir)
         .with_state(Arc::new(state));
     let addr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), port);
     let listener = tokio::net::TcpListener::bind(addr).await?;
